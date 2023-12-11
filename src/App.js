@@ -25,7 +25,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 // This can be moved out into a data.js file just here for a quick prototype
 // Also once moving into the data.js file we can then use javascript functions to push or pop
 // Alternatively we can use something JSON server to accomplish what we are doing here
-// The major difference is we would have the full CRUD functionality 
+// The major difference is we would have the full CRUD functionality
 const emails = [
   {
     id: 1,
@@ -111,54 +111,46 @@ const emails = [
 
 const MainForm = () => {
   const [selectedEmail, setSelectedEmail] = useState("");
-  const [action, setAction] = useState("");
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   const transferButtonRefs = useRef({});
   const deleteButtonRefs = useRef({});
 
-  const handleClickOpen = (action, user) => {
-    setSelectedEmail(action === "transfer" ? selectedEmail : "");
-    setAction(action);
+  const handleTransferClick = (user) => {
+    setSelectedEmail("");
+    setTransferOpen(true);
+    setDeleteOpen(false);
 
-    if (action === "delete") {
-      setConfirmationOpen(true);
-    }
-
-    // Set focus on the corresponding button
-    if (user && action === "transfer" && transferButtonRefs.current[user.id]) {
+    if (user && transferButtonRefs.current[user.id]) {
       transferButtonRefs.current[user.id].focus();
-    } else if (
-      user &&
-      action === "delete" &&
-      deleteButtonRefs.current[user.id]
-    ) {
+    }
+  };
+
+  const handleDeleteClick = (user) => {
+    setSelectedEmail("");
+    setTransferOpen(false);
+    setDeleteOpen(true);
+
+    if (user && deleteButtonRefs.current[user.id]) {
       deleteButtonRefs.current[user.id].focus();
     }
   };
 
   const handleClose = () => {
     setSelectedEmail("");
-    setAction("");
-    setMenuAnchorEl(null);
-    setConfirmationOpen(false);
-
-    // Set focus on the corresponding button
-    if (action === "transfer" && transferButtonRefs.current[selectedEmail]) {
-      transferButtonRefs.current[selectedEmail].focus();
-    } else if (action === "delete" && deleteButtonRefs.current[selectedEmail]) {
-      deleteButtonRefs.current[selectedEmail].focus();
-    }
+    setTransferOpen(false);
+    setDeleteOpen(false);
   };
 
-  // The updated emails isn't doing anything just here for a demo
-  // Only is used to allow us to select an email for a user
+  const handleCloseToast = () => {
+    setToastOpen(false);
+  };
+
   const handleAction = () => {
-    if (action === "delete") {
-      // Perform the delete action here
+    if (deleteOpen) {
       const deletedUser = emails.find((email) => email.id === selectedEmail);
       const updatedEmails = emails.filter(
         (email) => email.id !== selectedEmail
@@ -166,8 +158,7 @@ const MainForm = () => {
       setToastMessage(
         `User "${deletedUser.name}" (${deletedUser.email}) deleted`
       );
-    } else if (action === "transfer") {
-      // Implement the transfer logic here
+    } else if (transferOpen) {
       const transferredUser = emails.find(
         (email) => email.id === selectedEmail
       );
@@ -176,20 +167,17 @@ const MainForm = () => {
       );
     }
 
-    setAction("");
-    setConfirmationOpen(false);
-    setMenuAnchorEl(null);
+    setTransferOpen(false);
+    setDeleteOpen(false);
     setToastOpen(true);
   };
-  const handleCloseToast = () => {
-    setToastOpen(false);
-  };
-
   return (
-    <div>
+    <main>
+      <h1 style={{ textAlign: "center" }}>User Management MUI V4</h1>
+
       {/* Transfer dialog */}
       <Dialog
-        open={action === "transfer"}
+        open={transferOpen}
         onClose={handleClose}
         aria-labelledby="form-dialog-title"
       >
@@ -232,7 +220,7 @@ const MainForm = () => {
 
       {/* Delete confirmation dialog */}
       <Dialog
-        open={confirmationOpen}
+        open={deleteOpen}
         onClose={handleClose}
         aria-labelledby="form-dialog-title"
       >
@@ -286,11 +274,7 @@ const MainForm = () => {
           </TableHead>
           <TableBody>
             {emails.map((user) => (
-              <TableRow
-                key={user.id}
-                tabIndex={0} // Add tabindex to make the row focusable
-                onClick={(e) => handleClickOpen("transfer", user)}
-              >
+              <TableRow key={user.id} tabIndex={0}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.dept}</TableCell>
@@ -298,7 +282,7 @@ const MainForm = () => {
                 <TableCell>{user.role}</TableCell>
                 <TableCell align="right">
                   <Button
-                    onClick={(e) => handleClickOpen("transfer", user)}
+                    onClick={() => handleTransferClick(user)}
                     aria-label="transfer user projects"
                   >
                     <MoreVertIcon
@@ -311,7 +295,7 @@ const MainForm = () => {
                     />
                   </Button>
                   <Button
-                    onClick={(e) => handleClickOpen("delete", user)}
+                    onClick={() => handleDeleteClick(user)}
                     aria-label="delete user button"
                   >
                     <DeleteIcon
@@ -340,7 +324,7 @@ const MainForm = () => {
           {toastMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </main>
   );
 };
 
